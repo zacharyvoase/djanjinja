@@ -1,0 +1,343 @@
+<h1>DjanJinja v0.5</h1>
+
+<p>DjanJinja: the sound you make when you&#8217;ve got peanut butter stuck to the roof of
+your mouth. Incidentally, it also happens to be the name of a new re-usable
+Django app. This one, in fact.</p>
+
+<p>DjanJinja exists to help you leverage the power of
+<a href="http://jinja.pocoo.org/2/">Jinja2</a> templates in your Django projects. It&#8217;s
+simple to get started.</p>
+
+<h2>Installing and Using DjanJinja</h2>
+
+<h3>Installing DjanJinja</h3>
+
+<ol>
+<li>Install DjanJinja using <code>easy_install djanjinja</code>, <code>pip install djanjinja</code>, or
+by grabbing a copy of the Mercurial repo and running <code>python setup.py
+install</code>.</li>
+<li>Add <code>'djanjinja'</code> to your <code>INSTALLED_APPS</code> list.</li>
+<li>(Optionally) add <code>'djanjinja.middleware.RequestContextMiddleware'</code> to your
+<code>MIDDLEWARE_CLASSES</code> list.</li>
+</ol>
+
+<p>It’s assumed that you have fairly recent versions of Jinja2 and Django
+installed. The author recommends the <em>most recent</em> stable versions of each,
+which should be installable via PyPI (i.e. a simple <code>easy_install</code> or <code>pip
+install</code>). A lot of people have their own ways of installing things, so the
+author hasn’t put any explicit requirements in the <code>setup.py</code> file. DjanJinja
+just expects to find <code>jinja2</code> and <code>django</code> on the import path.</p>
+
+<h3>Using DjanJinja</h3>
+
+<ul>
+<li>Instead of using <code>django.shortcuts.render_to_response</code>, use one of the
+Jinja2-based functions provided.</li>
+<li>Instead of using the Django loaders to load templates, get them from the
+Jinja2 environment created for you by DjanJinja.</li>
+<li>Instead of using Django’s provided generic views, use those contained within
+<code>djanjinja.generic</code> (at the moment the only one is <code>direct_to_template()</code>).</li>
+</ul>
+
+<h2>Bundles</h2>
+
+<p>A Jinja2 environment can contain additional filters, tests and global variables
+which will be available in all templates rendered through that environment.
+Since individual Django apps will have their own set of things to add to the
+environment, DjanJinja adds the concept of ‘bundles’; small objects containing
+some global variables, filters and tests. Each app may define any number of
+these bundles which can then be loaded as required.</p>
+
+<h3>Defining Bundles</h3>
+
+<p>It’s relatively easy to define a bundle; an example is shown below:</p>
+
+<pre><code>from djanjinja.loader import Bundle
+
+foo = Bundle()
+foo.globals['myvar'] = 12345
+
+@foo.envfilter
+def myenvfilter(environment, value):
+    pass # do something here...
+
+@foo.ctxfunction
+def mycontextfunction(context, value):
+    pass # do something here...
+</code></pre>
+
+<p>Here we define a bundle called <code>foo</code>, with a global variable of <code>myvar</code>
+containing the value <code>12345</code>, an environment filter and a context function (for
+more information on each of these please consult the Jinja2 documentation). The
+<code>Bundle</code> class also supplies these handy decorators (the full list can be found
+as <code>djanjinja.loader.Bundle.TYPES</code>) to define various components.</p>
+
+<p>DjanJinja expects to find bundles in a <code>bundles</code> submodule of your Django app.
+You can lay things out in one of two ways:</p>
+
+<ul>
+<li>Add a file called <code>bundles.py</code> to your app, and within this define multiple
+<code>Bundle</code> instances.</li>
+<li>Add a package called <code>bundles</code> to your app (i.e. a <code>bundles</code> directory
+containing an empty file called <code>__init__.py</code>), and within this define
+submodules for each of your bundles. Each submodule should have a top-level
+<code>bundle</code> variable which is an instance of the <code>Bundle</code> class.</li>
+</ul>
+
+<p>You can actually mix and match these; you could add some bundle instances to the
+<code>bundles/__init__.py</code> file with different names, in addition to having the
+submodules. These are loaded lazily, so DjanJinja sees no real difference. It
+doesn’t scour the <code>bundles</code> module for definitions, it just loads what you ask
+it to.</p>
+
+<h3>Addressing Bundles</h3>
+
+<p>In order to use the functions, filters and tests defined in a bundle, you first
+have to load it into the environment. Bundles are specified in two parts: the
+‘app label’ and the ‘bundle name’. The app label is simply the name of the app
+which contains it. For example, it may be <code>django.contrib.auth</code>, or simply
+<code>auth</code>, since you may just give the last part of the full name and DjanJinja
+will figure it out from looking at the <code>INSTALLED_APPS</code> setting.</p>
+
+<p>If a bundle is defined within a <code>bundles.py</code> or a <code>bundles/__init__.py</code> file,
+then the bundle name will be the name in the module with which it was defined.
+For example:</p>
+
+<pre><code># in the file `myapp/bundles.py`
+foo = Bundle()
+foo.globals['myvar'] = 12345
+</code></pre>
+
+<p>In this case, the app label will be <code>myapp</code>, and the bundle name will be <code>foo</code>.
+If the bundles are defined in submodules, then the bundle name will be the name
+of the submodule.</p>
+
+<h3>Loading Bundles</h3>
+
+<p>In order to load any bundles into the Jinja2 environment, you need to specify a
+<code>DJANJINJA_BUNDLES</code> setting in your <code>settings.py</code> file. This is a list or tuple
+of bundle specifiers in an <code>'app_label.bundle_name'</code> format. For example:</p>
+
+<pre><code>DJANJINJA_BUNDLES = (
+    'djanjinja.cache',
+    'djanjinja.humanize',
+    'djanjinja.site',
+)
+</code></pre>
+
+<p>You can also add bundles to the environment programmatically. This is useful
+when:</p>
+
+<ul>
+<li>Your app needs to do some initial setup before a bundle is loaded.</li>
+<li>Your app relies on a particular bundle being present in the environment
+anyway, and you don’t want the user to have to add the bundle to
+<code>DJANJINJA_BUNDLES</code> manually.</li>
+<li>Your app needs to load bundles dynamically.</li>
+</ul>
+
+<p>You can load a bundle into an environment like this:</p>
+
+<pre><code>import djanjinja
+env = djanjinja.get_env()
+env.load('app_label', 'bundle_name', reload=False)
+</code></pre>
+
+<p>This will load the bundle into the environment, passing through if it’s already
+loaded. If you specify <code>reload=True</code>, you can make it reload a bundle even if
+it’s been loaded.</p>
+
+<p>You should put this code somewhere where it will get executed when you want it
+to. If you want it to be executed immediately, as Django starts up, put it in
+<code>myapp/__init__.py</code>.</p>
+
+<h3>Caveats and Limitations</h3>
+
+<p>Jinja2 does not yet support scoped filters and tests; as a result of this, the
+contents of bundles will be loaded into the global environment. It is important
+to make sure that definitions in your bundle do not override those in another
+bundle. This is especially important with threaded web applications, as multiple
+bundles overriding one another could cause unpredictable behavior in the
+templates.</p>
+
+<h3>Included Bundles</h3>
+
+<p>DjanJinja provides three bundles already which either replace Django
+counterparts or add some useful functionality to your Jinja2 templates:</p>
+
+<ul>
+<li><p><code>djanjinja.cache</code>: Loading this bundle will add a global <code>cache</code> object to the
+environment; this is the Django cache, and allows you to carry out caching
+operations from within your templates (such as <code>cache.get(key)</code>, et cetera).</p></li>
+<li><p><code>djanjinja.humanize</code>: This will add all of the filters contained within the
+<code>django.contrib.humanize</code> app; consult the official Django docs for more
+information on the filters provided.</p></li>
+<li><p><code>djanjinja.site</code>: This will add two functions to the global environment:
+<code>url</code>, and <code>setting</code>. The former acts like Django’s template tag, by reversing
+URLconf names and views into URLs, but because Jinja2 supports a richer
+syntax, it can be used via <code>{{ url(name, *args, **kwargs) }}</code> instead.
+<code>setting</code> attempts to resolve a setting name into a value, returning an
+optional default instead (i.e. <code>setting('MEDIA_URL', '/media')</code>).</p></li>
+</ul>
+
+<h2>Extensions</h2>
+
+<p>Jinja2 supports the concept of <em>environment extensions</em>; these are non-trivial
+plugins which enhance the Jinja2 templating engine itself. By default, the
+environment is configured with the <code>do</code> statement and the loop controls (i.e.
+<code>break</code> and <code>continue</code>), but if you want to add extensions to the environment
+then you can do so with the <code>JINJA_EXTENSIONS</code> setting. Just add this to your
+<code>settings.py</code> file:</p>
+
+<pre><code>JINJA_EXTENSIONS = (
+    'jinja2.ext.i18n', # i18n Extension
+    ...
+)
+</code></pre>
+
+<p>For all the extensions you wish to load. This will be passed in directly to the
+<code>jinja2.Environment</code> constructor.</p>
+
+<p>If you have set <code>USE_I18N = True</code> in your settings file, then DjanJinja will
+automatically initialize the i18n machinery for the Jinja2 environment, loading
+your Django translations during the bootstrapping process. For more information
+on how to use the Jinja2 i18n extension, please consult the Jinja2
+documentation.</p>
+
+<h3>Cache</h3>
+
+<p>DjanJinja also provides an extension for fragment caching using the Django cache
+system. The code for this borrows heavily from the example in the Jinja2
+documentation, but with a few extras thrown in. You can use the extension like
+this:</p>
+
+<pre><code>{% cache (parameter1, param2, param3), timeout %}
+    ...
+{% endcache %}
+</code></pre>
+
+<p>The tuple of parameters is used to generate the cache key for this fragment. You
+can place any object here, so long as it is suitable for serialization by the
+standard library <code>marshal</code> module. The cache key for the fragment is generated
+by marshaling the parameters, hashing them and then using the digest with a
+prefix as the key. This allows you to specify cached fragments which vary
+depending on multiple variables. The timeout is optional, and should be given in
+seconds.</p>
+
+<h2>Shortcut Functions</h2>
+
+<p>DjanJinja provides you with two shortcut functions for rendering templates,
+<code>render_to_response</code> and <code>render_to_string</code>. These are very similar to those
+provided by Django in the <code>django.shortcuts</code> module, except they use Jinja2
+instead of the Django templating system. To use them from your views, just do
+<code>from djanjinja.views import render_to_response, render_to_string</code> at the top of
+your views module.</p>
+
+<h2><code>RequestContext</code></h2>
+
+<p>One of Django&#8217;s most useful features is the <code>RequestContext</code> class, which allows
+you to specify several context processors which each add some information to the
+context before templates are rendered. Luckily, this feature is
+template-agnostic, and is therefore fully compatible with DjanJinja.</p>
+
+<p>However, DjanJinja also provides you with some very helpful shortcuts for using
+request contexts. Usually, without DjanJinja, you would use them like this:</p>
+
+<pre><code>from django.shortcuts import render_to_response
+from django.template import RequestContext
+
+def myview(request):
+    context = {'foo': bar, 'spam': eggs}
+    return render_to_response('template_name.html',
+        context, context_instance=RequestContext())
+</code></pre>
+
+<p>To be honest,this doesn&#8217;t look very much like a &#8216;shortcut&#8217; at all. For this
+reason, DjanJinja contains a subclass of <code>RequestContext</code> specialised for
+Jinja2, which is used like this:</p>
+
+<pre><code>from djanjinja.views import RequestContext
+
+def myview(request):
+    context = RequestContext(request, {'foo': bar, 'spam': eggs})
+    return context.render_response('template_name.html')
+</code></pre>
+
+<p>This code is much more concise, but loses none of the flexibility of the
+previous example. The main changes made are the addition of <code>render_response</code>
+and <code>render_string</code> methods to the context object itself. This is highly
+specialised to rendering Jinja2 templates, so it may not be a very reusable
+approach (indeed, other code which does not use Jinja2 will need to use the full
+Django syntax), but it works for the problem domain it was designed for.</p>
+
+<h2>Middleware</h2>
+
+<p>One important thing to note from before is that each time a <code>RequestContext</code>
+instance is constructed, it is necessary to explicitly pass the request. In
+object-oriented programming, and Python expecially, when we have functions to
+which we must always pass an object of a certain type, it makes sense to make
+that function a <em>method</em> of the type. When that function is not, in fact, a
+function, but a constructor, this seems more difficult. However, thanks to a
+feature of Python known as metaprogramming, we can do this very easily. Because
+it&#8217;s not exactly obvious how to do so, DjanJinja includes a special piece of
+middleware which can help make your code a lot shorter yet <em>still</em> retain all
+the functionality and flexibility of the previous two examples.</p>
+
+<p>To use this middleware, simply add
+<code>'djanjinja.middleware.RequestContextMiddleware'</code> to your <code>MIDDLEWARE_CLASSES</code>
+list in the settings module of your project. Then, you can write view code like
+this:</p>
+
+<pre><code>def myview(request):
+    return request.Context({'foo': bar, 'spam': eggs}).render_response(
+        'template_name.html')
+</code></pre>
+
+<p>As you can see, we&#8217;ve greatly reduced the verbosity of the previous code, but
+it&#8217;s still obvious what this code does. The middleware attaches a <code>Context</code>
+attribute to each request object. This attribute is in fact a fully-fledged
+Python class, which may itself be subclassed and modified later on. When
+constructed, it behaves almost exactly the same as the usual <code>RequestContext</code>,
+only it uses the request object to which it has been attached, so you don&#8217;t have
+to pass it in to the constructor every time.</p>
+
+<h2>Template Loading</h2>
+
+<p>DjanJinja hooks directly into the Django template loader machinery to load
+templates. This means you can mix Jinja2 templates freely with Django templates,
+in your <code>TEMPLATE_DIRS</code> and your applications, and render each type
+independently and seamlessly. If you want more information on how it actually
+works, please consult the <code>djanjinja/environment.py</code> file.</p>
+
+<h2>License</h2>
+
+<p>This software is licensed under the following MIT-style license:</p>
+
+<blockquote>
+  <p>Copyright (c) 2009 Zachary Voase</p>
+  
+  <p>Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation
+  files (the &#8220;Software&#8221;), to deal in the Software without
+  restriction, including without limitation the rights to use,
+  copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following
+  conditions:</p>
+  
+  <p>The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.</p>
+  
+  <p>THE SOFTWARE IS PROVIDED &#8220;AS IS&#8221;, WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+  OTHER DEALINGS IN THE SOFTWARE.</p>
+</blockquote>
+
+<h2>Author</h2>
+
+<p>Zachary Voase can be found on <a href="http://twitter.com/zacharyvoase">Twitter</a>.</p>
