@@ -6,13 +6,15 @@ DjanJinja exists to help you leverage the power of [Jinja2](http://jinja.pocoo.o
 
 ## Installing and Using DjanJinja
 
-### Installing
+### Installing DjanJinja
 
 1. Install DjanJinja using `easy_install djanjinja`, `pip install djanjinja`, or by grabbing a copy of the Mercurial repo and running `python setup.py install`.
 2. Add `'djanjinja'` to your `INSTALLED_APPS` list.
 3. (Optionally) add `'djanjinja.middleware.RequestContextMiddleware'` to your `MIDDLEWARE_CLASSES` list.
 
-### Using
+It’s assumed that you have fairly recent versions of Jinja2 and Django installed. The author recommends the *most recent* stable versions of each, which should be installable via PyPI (i.e. a simple `easy_install` or `pip install`). A lot of people have their own ways of installing things, so the author hasn’t put any explicit requirements in the `setup.py` file. DjanJinja just expects to find `jinja2` and `django` on the import path.
+
+### Using DjanJinja
 
 * Instead of using `django.shortcuts.render_to_response`, use one of the Jinja2-based functions provided.
 * Instead of using the Django loaders to load templates, get them from the Jinja2 environment created for you by DjanJinja.
@@ -88,7 +90,7 @@ You should put this code somewhere where it will get executed when you want it t
 
 ### Caveats and Limitations
 
-Jinja2 does not yet support scoped filters and tests; as a result of this, bundles will be loaded into the global environment. It is important to make sure that definitions in your bundle do not override those in another bundle. This is especially important with threaded web applications, as multiple bundles overriding one another could cause unpredictable behavior in the templates.
+Jinja2 does not yet support scoped filters and tests; as a result of this, the contents of bundles will be loaded into the global environment. It is important to make sure that definitions in your bundle do not override those in another bundle. This is especially important with threaded web applications, as multiple bundles overriding one another could cause unpredictable behavior in the templates.
 
 ### Included Bundles
 
@@ -139,7 +141,7 @@ However, DjanJinja also provides you with some very helpful shortcuts for using 
         return render_to_response('template_name.html',
             context, context_instance=RequestContext())
 
-To be honest, I don't think this looks very much like a 'shortcut' at all. For this reason, DjanJinja contains a subclass of `RequestContext` specialised for Jinja2, which is used like this:
+To be honest,this doesn't look very much like a 'shortcut' at all. For this reason, DjanJinja contains a subclass of `RequestContext` specialised for Jinja2, which is used like this:
 
     from djanjinja.views import RequestContext
     
@@ -151,7 +153,7 @@ This code is much more concise, but loses none of the flexibility of the previou
 
 ## Middleware
 
-One important thing to note from before is that each time I construct a `RequestContext` instance, I pass it the request. In object-oriented programming, and Python expecially, when we have functions to which we must always pass an object of a certain type, it makes sense to make that function a *method* of the type. When that function is not a function but a constructor, this seems more difficult. However, thanks to a feature of Python known as metaprogramming, we can do this very easily. Because it's not exactly obvious how to do so, DjanJinja includes a special piece of middleware which can help make your code a lot shorter yet *still* retain all the functionality and flexibility of the previous two examples.
+One important thing to note from before is that each time a `RequestContext` instance is constructed, it is necessary to explicitly pass the request. In object-oriented programming, and Python expecially, when we have functions to which we must always pass an object of a certain type, it makes sense to make that function a *method* of the type. When that function is not, in fact, a function, but a constructor, this seems more difficult. However, thanks to a feature of Python known as metaprogramming, we can do this very easily. Because it's not exactly obvious how to do so, DjanJinja includes a special piece of middleware which can help make your code a lot shorter yet *still* retain all the functionality and flexibility of the previous two examples.
 
 To use this middleware, simply add `'djanjinja.middleware.RequestContextMiddleware'` to your `MIDDLEWARE_CLASSES` list in the settings module of your project. Then, you can write view code like this:
 
