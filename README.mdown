@@ -70,12 +70,12 @@ as `djanjinja.loader.Bundle.TYPES`) to define various components.
 DjanJinja expects to find bundles in a `bundles` submodule of your Django app.
 You can lay things out in one of two ways:
     
-    * Add a file called `bundles.py` to your app, and within this define
-      multiple `Bundle` instances.
-    * Add a package called `bundles` to your app (i.e. a `bundles` directory
-      containing an empty file called `__init__.py`), and within this define
-      submodules for each of your bundles. Each submodule should have a
-      top-level `bundle` variable which is an instance of the `Bundle` class.
+* Add a file called `bundles.py` to your app, and within this define multiple
+  `Bundle` instances.
+* Add a package called `bundles` to your app (i.e. a `bundles` directory
+  containing an empty file called `__init__.py`), and within this define
+  submodules for each of your bundles. Each submodule should have a top-level
+  `bundle` variable which is an instance of the `Bundle` class.
 
 You can actually mix and match these; you could add some bundle instances to the
 `bundles/__init__.py` file with different names, in addition to having the
@@ -153,20 +153,20 @@ templates.
 DjanJinja provides three bundles already which either replace Django
 counterparts or add some useful functionality to your Jinja2 templates:
     
-    * `djanjinja.cache`: Loading this bundle will add a global `cache` object to
-      the environment; this is the Django cache, and allows you to carry out
-      caching operations from within your templates (such as `cache.get(key)`,
-      et cetera).
-    * `djanjinja.humanize`: This will add all of the filters contained within
-      the `django.contrib.humanize` app; consult the official Django docs for
-      more information on the filters provided.
-    * `djanjinja.site`: This will add two functions to the global environment:
-      `url`, and `setting`. The former acts like Django’s template tag, by
-      reversing URLconf names and views into URLs, but because Jinja2 supports a
-      richer syntax, it can be used via `{{ url(name, *args, **kwargs) }}`
-      instead. `setting` attempts to resolve a setting name into a value,
-      returning an optional default instead (i.e. `setting('MEDIA_URL',
-      '/media')`).
+* `djanjinja.cache`: Loading this bundle will add a global `cache` object to the
+  environment; this is the Django cache, and allows you to carry out caching
+  operations from within your templates (such as `cache.get(key)`, et cetera).
+
+* `djanjinja.humanize`: This will add all of the filters contained within the
+  `django.contrib.humanize` app; consult the official Django docs for more
+  information on the filters provided.
+
+* `djanjinja.site`: This will add two functions to the global environment:
+  `url`, and `setting`. The former acts like Django’s template tag, by reversing
+  URLconf names and views into URLs, but because Jinja2 supports a richer
+  syntax, it can be used via `{{ url(name, *args, **kwargs) }}` instead.
+  `setting` attempts to resolve a setting name into a value, returning an
+  optional default instead (i.e. `setting('MEDIA_URL', '/media')`).
 
 ## Extensions
 
