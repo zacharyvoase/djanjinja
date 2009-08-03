@@ -1,18 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from paver.easy import *
-from paver.setuputils import find_packages, setup
-
-
-setup(
-    name='DjanJinja',
-    version='0.5',
-    packages=find_packages(exclude=('djanjinja_test', 'djanjinja_test.*')),
-    url='http://bitbucket.org/zacharyvoase/djanjinja/',
-    
-    author='Zachary Voase',
-    author_email='zacharyvoase@me.com',
-)
 
 
 @task
