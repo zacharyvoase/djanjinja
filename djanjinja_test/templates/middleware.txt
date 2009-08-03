@@ -1,0 +1,1 @@
+{% if user.is_anonymous() %}anonymous{% endif %}, a{{ a }}, b{{ b }}

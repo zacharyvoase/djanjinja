@@ -1,0 +1,3 @@
+{% cache "fragment_caching", 3600 %}
+  {{ call_state.call() }}
+{% endcache %}

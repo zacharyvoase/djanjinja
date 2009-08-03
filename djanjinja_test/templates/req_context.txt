@@ -1,0 +1,1 @@
+user.is_anonymous() => {{ user.is_anonymous() }}
