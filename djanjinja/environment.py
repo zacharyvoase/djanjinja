@@ -131,14 +131,12 @@ def bootstrap():
     
     from djanjinja import bccache
     from djanjinja.extensions.cache import CacheExtension
-    from djanjinja.extensions.load import LoadExtension
     
     # Get the bytecode cache object.
     bytecode_cache = bccache.get_cache()
     
     default_extensions = set([
-        'jinja2.ext.do', 'jinja2.ext.loopcontrols',
-        CacheExtension, LoadExtension])
+        'jinja2.ext.do', 'jinja2.ext.loopcontrols', CacheExtension])
     if getattr(settings, 'USE_I18N', False):
         default_extensions.add('jinja2.ext.i18n')
     
