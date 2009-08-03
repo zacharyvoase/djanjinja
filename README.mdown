@@ -321,4 +321,4 @@ This software is licensed under the following MIT-style license:
 
 ## Author
 
-Zachary Voase can be found on `Twitter <http://twitter.com/zacharyvoase>`_.
+Zachary Voase can be found on [Twitter](http://twitter.com/zacharyvoase).
