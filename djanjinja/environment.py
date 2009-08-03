@@ -23,6 +23,11 @@ class Environment(jinja2.Environment):
     
     """An environment with decorators for filters, functions and tests."""
     
+    def __init__(self, *args, **kwargs):
+        super(Environment, self).__init__(*args, **kwargs)
+        # Add a `set()` attribute which stores the loaded bundles.
+        self.loaded_bundles = set()
+    
     def load(self, app_label, bundle_name, reload=False):
         """Load the specified bundle into this environment."""
         
