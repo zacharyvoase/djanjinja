@@ -1,4 +1,4 @@
-<h1>DjanJinja v0.5</h1>
+<h1>DjanJinja v0.6</h1>
 
 <p>DjanJinja: the sound you make when you&#8217;ve got peanut butter stuck to the roof of
 your mouth. Incidentally, it also happens to be the name of a new re-usable
@@ -38,6 +38,15 @@ Jinja2 environment created for you by DjanJinja.</li>
 <li>Instead of using Django’s provided generic views, use those contained within
 <code>djanjinja.generic</code> (at the moment the only one is <code>direct_to_template()</code>).</li>
 </ul>
+
+<h2>Shortcut Functions</h2>
+
+<p>DjanJinja provides you with two shortcut functions for rendering templates,
+<code>render_to_response</code> and <code>render_to_string</code>. These are very similar to those
+provided by Django in the <code>django.shortcuts</code> module, except they use Jinja2
+instead of the Django templating system. To use them from your views, just do
+<code>from djanjinja.views import render_to_response, render_to_string</code> at the top of
+your views module.</p>
 
 <h2>Bundles</h2>
 
@@ -114,7 +123,7 @@ of the submodule.</p>
 
 <h3>Loading Bundles</h3>
 
-<p>In order to load any bundles into the Jinja2 environment, you need to specify a
+<p>In order to load any bundles into the global Jinja2 environment, you need to specify a
 <code>DJANJINJA_BUNDLES</code> setting in your <code>settings.py</code> file. This is a list or tuple
 of bundle specifiers in an <code>'app_label.bundle_name'</code> format. For example:</p>
 
@@ -130,10 +139,11 @@ when:</p>
 
 <ul>
 <li>Your app needs to do some initial setup before a bundle is loaded.</li>
-<li>Your app relies on a particular bundle being present in the environment
+<li>Your app relies on a particular bundle being present in the global environment
 anyway, and you don’t want the user to have to add the bundle to
 <code>DJANJINJA_BUNDLES</code> manually.</li>
 <li>Your app needs to load bundles dynamically.</li>
+<li>Your app wants to use a bundle locally, not globally.</li>
 </ul>
 
 <p>You can load a bundle into an environment like this:</p>
@@ -151,10 +161,43 @@ it’s been loaded.</p>
 to. If you want it to be executed immediately, as Django starts up, put it in
 <code>myapp/__init__.py</code>.</p>
 
+<p>You can also use a bundle within only one app, by using a local environment
+copied from the global environment. Here’s how you might do this:</p>
+
+<pre><code>import djanjinja
+global_env = djanjinja.get_env()
+local_env = global_env.copy()
+local_env.load('app_label', 'bundle_name')
+</code></pre>
+
+<p>You&#8217;d then use that local environment later on in your code. For example, the
+above code might be in <code>myapp/__init__.py</code>; so your views might look like this:</p>
+
+<pre><code>from django.http import HttpResponse
+from myapp import local_env
+
+def view(request):
+    template = local_env.get_template('template_name.html')
+    data = template.render({'key1': 'value1', 'key2': 'value2'})
+    return HttpResponse(content=data)
+</code></pre>
+
+<p>Of course, you’re probably going to want to use the usual shortcuts (i.e.
+<code>render_to_response()</code> and <code>render_to_string()</code>). You can build these easily
+using <code>djanjinja.views.shortcuts_for_environment()</code>:</p>
+
+<pre><code>from djanjinja.views import shortcuts_for_environment
+
+render_to_response, render_to_string = shortcuts_for_environment(local_env)
+</code></pre>
+
+<p>Do this at the top of your <code>views.py</code> file, and then you can use the generated
+functions throughout all of your views.</p>
+
 <h3>Caveats and Limitations</h3>
 
 <p>Jinja2 does not yet support scoped filters and tests; as a result of this, the
-contents of bundles will be loaded into the global environment. It is important
+contents of bundles specified in <code>DJANJINJA_BUNDLES</code> will be loaded into the global environment. It is important
 to make sure that definitions in your bundle do not override those in another
 bundle. This is especially important with threaded web applications, as multiple
 bundles overriding one another could cause unpredictable behavior in the
@@ -224,14 +267,15 @@ prefix as the key. This allows you to specify cached fragments which vary
 depending on multiple variables. The timeout is optional, and should be given in
 seconds.</p>
 
-<h2>Shortcut Functions</h2>
+<h2>404 and 500 Handlers</h2>
 
-<p>DjanJinja provides you with two shortcut functions for rendering templates,
-<code>render_to_response</code> and <code>render_to_string</code>. These are very similar to those
-provided by Django in the <code>django.shortcuts</code> module, except they use Jinja2
-instead of the Django templating system. To use them from your views, just do
-<code>from djanjinja.views import render_to_response, render_to_string</code> at the top of
-your views module.</p>
+<p>Your project’s URLconf must specify two variables—<code>handler404</code> and <code>handler500</code>—which give the name of a Django view to be processed in the event of a 404 &#8220;Not Found&#8221; and a 500 &#8220;Server Error&#8221; response respectively. These are set to a default which uses the Django templating system to render a response from templates called <code>404.html</code> and <code>500.html</code>. If you were to use the Jinja2 templating system instead, you will be able to define richer error pages, and your error pages will be able to inherit from and extend other Jinja2 master templates on the template path.</p>
+
+<p>It’s relatively simple to set Django up to do this. Simply override the handler variables like so from your <code>urls.py</code> file:</p>
+
+<pre><code>handler404 = 'djanjinja.handlers.page_not_found'
+handler500 = 'djanjinja.handlers.server_error'
+</code></pre>
 
 <h2><code>RequestContext</code></h2>
 
