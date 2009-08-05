@@ -141,4 +141,5 @@ def load(app_label, bundle_name, environment=None, reload=False):
     bundle = get_bundle(app_label, bundle_name)
     if (bundle not in environment.loaded_bundles) or reload:
         bundle.merge_into(environment)
+        environment.loaded_bundles.add(bundle)
     return bundle

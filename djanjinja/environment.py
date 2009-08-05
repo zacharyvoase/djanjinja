@@ -37,6 +37,15 @@ class Environment(jinja2.Environment):
         return loader.load(
             app_label, bundle_name, environment=self, reload=reload)
     
+    def copy(self):
+        """Create a copy of the environment."""
+        
+        copy = self.overlay()
+        for attr in ['loaded_bundles', 'globals', 'filters', 'tests']:
+            setattr(copy, attr, getattr(self, attr).copy())
+        
+        return copy
+    
     # pylint: disable-msg=C0111
     def adder(attribute, wrapper, name, docstring):
         
