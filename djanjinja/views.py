@@ -94,8 +94,8 @@ def render_to_response(filename, context=None, mimetype=DEFAULT_CONTENT_TYPE,
     """Renders a given template name to a ``django.http.HttpResponse``."""
     
     return HttpResponse(
-        render_to_string(filename, context=context), mimetype=mimetype,
-        environment=environment)
+        render_to_string(filename, context=context, environment=environment),
+        mimetype=mimetype)
 
 
 def shortcuts_for_environment(environment):
