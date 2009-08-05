@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name='DjanJinja',
-    version='0.5',
+    version='0.6',
     description='Easy Django and Jinja2 integration.',
     packages=['djanjinja', 'djanjinja.bundles', 'djanjinja.extensions'],
     url='http://bitbucket.org/zacharyvoase/djanjinja/',
