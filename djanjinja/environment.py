@@ -153,16 +153,18 @@ def bootstrap():
         'jinja2.ext.do', 'jinja2.ext.loopcontrols', CacheExtension])
     if getattr(settings, 'USE_I18N', False):
         default_extensions.add('jinja2.ext.i18n')
+    autoescape = getattr(settings, 'JINJA_AUTOESCAPE', False)
+    if autoescape:
+        default_extensions.add('jinja2.ext.autoescape')
     
-    extensions = getattr(settings, 'JINJA_EXTENSIONS', []) + list(
-        default_extensions)
+    extensions = list(set(getattr(settings, 'JINJA_EXTENSIONS', [])).union(default_extensions))
     
     # Set up global `TEMPLATE_ENVIRONMENT` variable.
     global TEMPLATE_ENVIRONMENT
     
     TEMPLATE_ENVIRONMENT = Environment(
         loader=jinja2.FunctionLoader(get_template_source),
-        auto_reload=getattr(settings, 'DEBUG', True),
+        auto_reload=getattr(settings, 'DEBUG', True), autoescape=autoescape,
         bytecode_cache=bytecode_cache, extensions=extensions)
     
     if getattr(settings, 'USE_I18N', False):
