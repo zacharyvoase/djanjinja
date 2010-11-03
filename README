@@ -233,6 +233,11 @@ your Django translations during the bootstrapping process. For more information
 on how to use the Jinja2 i18n extension, please consult the Jinja2
 documentation.
 
+### Autoescaping
+
+To enable autoescaping, just add `JINJA_AUTOESCAPE = True` to your settings
+file. This will add the extension and set up the Jinja2 environment correctly.
+
 ### Cache
 
 DjanJinja also provides an extension for fragment caching using the Django cache
