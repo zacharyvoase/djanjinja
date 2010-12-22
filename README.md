@@ -1,6 +1,4 @@
-<!--*-markdown-*-->
-
-# DjanJinja v0.8
+# DjanJinja
 
 DjanJinja: the sound you make when you've got peanut butter stuck to the roof of
 your mouth. Incidentally, it also happens to be the name of a new re-usable
